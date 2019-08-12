@@ -1,0 +1,107 @@
+#
+import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
+import os
+#from sklearn.cross_validation import train_test_split
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+os.chdir('C:\\Users\\')
+
+# Importo dataset CSV
+dataset = pd.read_csv('50_Startups.csv')
+X = dataset.iloc[:,:-1].values
+print(X)
+# Variable a estimar
+y = dataset.iloc[:, 4].values
+print(y)
+
+
+dataset = pd.read_sql(perfil_tecno,session)
+
+# Procesamiento de datos categóricos, texto en números
+from sklearn.preprocessing import LabelEncoder, OneHotEncoder
+labelencoder_X = LabelEncoder()
+
+X[:, 3] = labelencoder_X.fit_transform(X[:, 3])
+
+onehotencoder = OneHotEncoder(categorical_features = [3])
+
+X = onehotencoder.fit_transform(X).toarray()
+
+# verifico variables
+dataset.head()
+dataset.groupby(['State'])['Administration'].count()
+
+# Evitando la trampa de la variable, en este caso excluyo a california
+X = X[:, 1:]
+
+
+# Organizo traint y test observation
+#from sklearn.cross_validation import train_test_split
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.2, random_state = 0)
+
+from sklearn.linear_model import LinearRegression
+from sklearn import linear_model
+regresor = LinearRegression()
+print(X_train)
+print(y_train)
+regresor.fit(X_train, y_train)
+
+
+# Predictor
+
+y_pred = regresor.predict(X_test)
+
+regresor.score(X_train,y_train)
+
+
+
+#paso 2 fit the full model whit all possible predictors
+# buscar/mejorar/evaluar las variables independientes
+
+import statsmodels.formula.api as sm
+X = np.append(arr = np.ones((50, 1)).astype(int), values = X, axis=1)
+
+# Armar modelo optimizado 
+X_opt = X[:, [0, 1, 2, 3 ,4 ,5]]
+regresor_OLS = sm.OLS(endog = y, exog = X_opt).fit()
+regresor_OLS.summary()
+
+#paso 3 optimizando
+X_opt = X[:, [0, 1, 3 ,4 ,5]]
+regresor_OLS = sm.OLS(endog = y, exog = X_opt).fit()
+regresor_OLS.summary()
+
+X_opt = X[:, [0, 3 ,4 ,5]]
+regresor_OLS = sm.OLS(endog = y, exog = X_opt).fit()
+regresor_OLS.summary()
+
+X_opt = X[:, [0, 3,5]]
+regresor_OLS = sm.OLS(endog = y, exog = X_opt).fit()
+regresor_OLS.summary()
+
+X_opt = X[:, [0, 3]]
+regresor_OLS = sm.OLS(endog = y, exog = X_opt).fit()
+regresor_OLS.summary()
+
+#automatizo lo anterior
+
+import statsmodels.formula.api as sm
+def backwardElimination(x, sl):
+    numVars = len(x[0])
+    for i in range(0, numVars):
+        regressor_OLS = sm.OLS(y, x).fit()
+        maxVar = max(regressor_OLS.pvalues).astype(float)
+        if maxVar > sl:
+            for j in range(0, numVars - i):
+                if (regressor_OLS.pvalues[j].astype(float) == maxVar):
+                    x = np.delete(x, j, 1)
+    regressor_OLS.summary()
+    return x
+ 
+SL = 0.05
+X_opt = X[:, [0, 1, 2, 3, 4, 5]]
+X_Modeled = backwardElimination(X_opt, SL)
+
